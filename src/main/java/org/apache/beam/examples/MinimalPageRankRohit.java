@@ -66,7 +66,7 @@ import org.apache.beam.sdk.values.TypeDescriptors;
  * "wordcounts-00001-of-00005. When running on a distributed service, you would use an appropriate
  * file service.
  */
-public class MinimalPageRankCase {
+public class MinimalPageRankRohit {
 
   public static void main(String[] args) {
 
@@ -99,43 +99,47 @@ public class MinimalPageRankCase {
     // the input text (a set of Shakespeare's texts).
 
     // This example reads from a public dataset containing the text of King Lear.
-    //
-    // DC: We don't need king lear....
-    // We want to read from a folder - assign to a variable since it may change.
-    // We want to read from a file - just one - we need the file name - assign to a variable. 
+    String folder="web04";
+    String file="go.md";
+    // This example reads from a public dataset containing the text of King Lear.
+    p.apply(TextIO.read().from("/"+folder+"/"+file))
+      // .apply(Filter.by((String line) -> !line.isEmpty()))    
+      // .apply(Filter.by((String line) -> !line.equals(" ")))
+      .apply(Filter.by((String line) -> line.startsWith("[")))  
+      .apply(
+            MapElements.into(TypeDescriptors.strings())
+                .via(
+                   (String linkline)->
+                        linkline.substring(linkline.indexOf("(")+1,linkline.length()-1)
+                    )
+            )
 
-    String dataFolder = "web04";
-    String dataFile = "go.md";
-    String dataPath = dataFolder + "/" + dataFile;
-    //p.apply(TextIO.read().from("gs://apache-beam-samples/shakespeare/kinglear.txt"))
-
-    p.apply(TextIO.read().from(dataPath))
 
         // Concept #2: Apply a FlatMapElements transform the PCollection of text lines.
         // This transform splits the lines in PCollection<String>, where each element is an
         // individual word in Shakespeare's collected texts.
-        .apply(
-            FlatMapElements.into(TypeDescriptors.strings())
-                .via((String line) -> Arrays.asList(line.split("[^\\p{L}]+"))))
-        // We use a Filter transform to avoid empty word
-        .apply(Filter.by((String word) -> !word.isEmpty()))
+        // .apply(
+        //     FlatMapElements.into(TypeDescriptors.strings())
+        //         .via((String line) -> Arrays.asList(line.split("[^\\p{L}]+"))))
+        // // We use a Filter transform to avoid empty word
+        // .apply(Filter.by((String word) -> !word.isEmpty()))
         // Concept #3: Apply the Count transform to our PCollection of individual words. The Count
         // transform returns a new PCollection of key/value pairs, where each key represents a
         // unique word in the text. The associated value is the occurrence count for that word.
-        .apply(Count.perElement())
+        // .apply(Count.perElement())
         // Apply a MapElements transform that formats our PCollection of word counts into a
         // printable string, suitable for writing to an output file.
-        .apply(
-            MapElements.into(TypeDescriptors.strings())
-                .via(
-                    (KV<String, Long> wordCount) ->
-                        wordCount.getKey() + ": " + wordCount.getValue()))
+        // .apply(
+        //     MapElements.into(TypeDescriptors.strings())
+        //         .via(
+        //             (KV<String, Long> wordCount) ->
+        //                 wordCount.getKey() + ": " + wordCount.getValue()))
         // Concept #4: Apply a write transform, TextIO.Write, at the end of the pipeline.
         // TextIO.Write writes the contents of a PCollection (in this case, our PCollection of
         // formatted strings) to a series of text files.
         //
         // By default, it will write to a set of files with names like wordcounts-00001-of-00005
-        .apply(TextIO.write().to("wordcounts"));
+        .apply(TextIO.write().to("Rohit"));
 
     p.run().waitUntilFinish();
   }
