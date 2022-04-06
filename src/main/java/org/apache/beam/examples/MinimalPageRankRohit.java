@@ -39,6 +39,8 @@ import org.apache.beam.sdk.transforms.FlatMapElements;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptors;
+import org.apache.beam.sdk.values.PCollection;
+
 
 /**
  * An example that counts words in Shakespeare.
@@ -99,21 +101,35 @@ public class MinimalPageRankRohit {
     // the input text (a set of Shakespeare's texts).
 
     // This example reads from a public dataset containing the text of King Lear.
-    String folder="web04";
-    String file="go.md";
-    // This example reads from a public dataset containing the text of King Lear.
-    p.apply(TextIO.read().from("/"+folder+"/"+file))
-      // .apply(Filter.by((String line) -> !line.isEmpty()))    
-      // .apply(Filter.by((String line) -> !line.equals(" ")))
-      .apply(Filter.by((String line) -> line.startsWith("[")))  
-      .apply(
-            MapElements.into(TypeDescriptors.strings())
-                .via(
-                   (String linkline)->
-                        linkline.substring(linkline.indexOf("(")+1,linkline.length()-1)
-                    )
-            )
+     String folder="web04";
 
+    String file="go.md";
+
+   
+
+    // This example reads from a public dataset containing the text of King Lear.
+
+  PCollection<String> pcolInputLines = p.apply(TextIO.read().from("/"+folder+"/"+file));
+
+      // .apply(Filter.by((String line) -> !line.isEmpty()))    
+
+      // .apply(Filter.by((String line) -> !line.equals(" ")))
+
+      PCollection<String> pcolLinkLines = pcolInputLines.apply(Filter.by((String line) -> line.startsWith("[")));  
+
+     PCollection<String>  pcolLinks =  pcolLinkLines.apply(
+
+            MapElements.into(TypeDescriptors.strings())
+
+                .via(
+
+                   (String linkline)->
+
+                        linkline.substring(linkline.indexOf("(")+1,linkline.length()-1)
+
+                    )
+
+            );
 
         // Concept #2: Apply a FlatMapElements transform the PCollection of text lines.
         // This transform splits the lines in PCollection<String>, where each element is an
@@ -139,7 +155,7 @@ public class MinimalPageRankRohit {
         // formatted strings) to a series of text files.
         //
         // By default, it will write to a set of files with names like wordcounts-00001-of-00005
-        .apply(TextIO.write().to("Rohit"));
+        pcolLinks.apply(TextIO.write().to("Rohit"));
 
     p.run().waitUntilFinish();
   }
